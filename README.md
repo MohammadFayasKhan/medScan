@@ -5,17 +5,16 @@
 <img src="https://img.shields.io/badge/scikit--learn-1.6-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white"/>
 <img src="https://img.shields.io/badge/OpenCV-4.13-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white"/>
 <img src="https://img.shields.io/badge/Offline-100%25-00C851?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/Tests-66%20Passed-brightgreen?style=for-the-badge"/>
 
 <br/><br/>
 
-# 💊 MedScan AI
+# 💊 MedScan+ 
 
-### Offline Medicine Intelligence System
+### Production-Grade Offline Medicine Intelligence System
 
-*Scan · Search · Chat · Compare — Zero Internet Required at Runtime*
+*Scan · Search · Chat — Zero Internet Required at Runtime*
 
-**INT428 — AI Systems Design**
+**Developed by Mohammad Fayas Khan**
 
 ---
 
@@ -23,440 +22,133 @@
 
 ## 🧭 Overview
 
-**MedScan AI** is a fully offline, AI-powered medicine information system built with Python and Streamlit. It lets users identify medicines by uploading a photo or typing a name, then displays detailed clinical information and allows follow-up questions through a locally running NLP chatbot — all without any internet connection or external API.
+**MedScan+** is a fully offline, AI-powered medicine information system built with Python and Streamlit. It allows users to identify medicines by taking a picture, uploading a photo, or typing a name. It then displays detailed clinical information from a massive localized database of **11,825 medicines** and allows follow-up questions through a locally running NLP chatbot.
 
-The project was built as part of the **INT428 AI Systems Design** course and demonstrates real-world application of machine learning concepts including TF-IDF vectorisation, Naive Bayes classification, computer vision, and fuzzy text matching.
+**Zero Internet Required.** Architecture guarantees maximum privacy. There are no external API calls, tracking pixels, or background data exfiltration.
 
-> ✅ **Highlight:** 99.1% Naive Bayes intent classification accuracy across 14 medical categories, tested with 66 automated unit tests.
+> ✅ **Key Highlight:** Designed with a 99.1% Naive Bayes intent classification accuracy and intelligent streaming responses, featuring an ultra-fast TF-IDF indexing vectorizer.
 
 ---
 
 ## ✨ Features
 
-| Feature | Technology Used |
-|---------|----------------|
-| 📷 **OCR Medicine Scanner** | OpenCV image preprocessing + Tesseract LSTM |
-| 🔍 **3-Strategy Search Engine** | Exact match → TF-IDF cosine similarity → Levenshtein fuzzy |
-| 🤖 **Offline NLP Chatbot** | Naive Bayes classifier + TF-IDF intent indexing |
-| ⚖️ **Side-by-Side Comparison** | Radar chart scoring + written verdict |
-| 📋 **Medicine Database Browser** | 20 medicines × 27 clinical fields, filterable by category |
-| ⬇️ **Data Export** | Download results as CSV, JSON, or chat transcript |
-| 🎨 **Custom Dark UI** | Tailored CSS design system, no external CSS framework |
+| Feature | Technology Used | Description|
+|---------|----------------|------------|
+| 📸 **Native Camera & OCR** | OpenCV + Tesseract LSTM | Extract medicine names entirely on-device from physical pill boxes. |
+| 🔍 **3-Strategy Search** | TF-IDF / Exact / Levenshtein | Intelligently falls back on fuzzy matching to compensate for spelling variations. |
+| 🤖 **Offline Chatbot** | Naive Bayes + TF-IDF | A completely offline context-aware assistant with a ChatGPT-style conversational UI. |
+| 📊 **Immersive UI/UX** | Custom Minimalist CSS | Premium dark mode experience designed specifically for high-density medical data. |
+| 🗄️ **Massive Local DB** | Pandas + PyArrow Engine | Seamless integration with an 11.8k+ row dataset encompassing reviews, side effects, and more.|
 
 ---
 
-## 📁 Project Structure
+## 🤖 Architecture & Under The Hood
 
-```
-medscan_ai/
-│
-├── app.py                       # Main entry point — Streamlit 3-tab dashboard
-├── setup.py                     # First-time setup: downloads NLTK, trains models
-├── requirements.txt             # All Python package dependencies
-├── packages.txt                 # System packages for Hugging Face Spaces (apt-get)
-├── Dockerfile                   # Builds a fully self-contained Docker image
-├── docker-compose.yml           # One-command Docker launch with volume persistence
-├── Makefile                     # Shortcuts: make run, make stop, make test, etc.
-├── run.sh / run.bat             # Launch shortcuts for Linux/Mac and Windows
-│
-├── modules/                     # Core logic — all AI/NLP processing lives here
-│   ├── preprocessor.py         # Text cleaning, tokenisation, stopword removal (NLTK)
-│   ├── medicine_db.py          # Database loader, validator, query helpers
-│   ├── medicine_search.py      # Multi-strategy search: exact, TF-IDF, fuzzy
-│   ├── ocr_engine.py           # OpenCV image preprocessing + Tesseract OCR
-│   ├── chatbot.py              # TF-IDF intent matcher + response generator
-│   ├── intent_classifier.py    # Naive Bayes intent classifier (sklearn)
-│   ├── compare_engine.py       # Scoring logic + matplotlib radar chart
-│   ├── model_trainer.py        # Orchestrates model training at setup time
-│   └── export_utils.py         # In-memory CSV/JSON/text export for Streamlit
-│
-├── components/                  # UI layer — all Streamlit rendering code
-│   ├── ui_styles.py            # Global CSS injected into Streamlit
-│   ├── medicine_card.py        # Medicine header card with category badge
-│   ├── info_sections.py        # 9 collapsible accordion info sections
-│   ├── chatbot_ui.py           # Chat interface with quick question chips
-│   ├── scan_ui.py              # Upload/text search interface and OCR results
-│   ├── compare_ui.py           # Comparison tab with table and radar chart
-│   └── sidebar_ui.py           # Sidebar: system status, history, quick access
-│
-├── data/
-│   ├── medicines.csv           # 20 medicines with 27 clinical data fields each
-│   ├── intents.json            # 14 chatbot intent categories, 799 patterns total
-│   ├── synonyms.json           # Brand name to generic name mapping
-│   └── sample_images/          # Folder for test images when using OCR mode
-│
-├── models/                      # Auto-generated at setup — not committed to Git
-│   ├── intent_classifier.pkl   # Trained Naive Bayes classifier
-│   ├── tfidf_vectorizer.pkl    # Fitted TF-IDF vectoriser (chatbot)
-│   ├── label_encoder.pkl       # Intent label encoder
-│   └── search_index.pkl        # Pre-built medicine search index
-│
-├── tests/                       # Unit test suite — 66 tests across 5 modules
-│   ├── test_db.py              # Tests for database loading and querying
-│   ├── test_search.py          # Tests for all 3 search strategies
-│   ├── test_chatbot.py         # Tests for intent classification and responses
-│   ├── test_ocr.py             # Tests for OCR text cleaning and candidates
-│   └── test_algorithms.py      # Tests for ML accuracy and algorithm correctness
-│
-└── docs/
-    └── README.md               # Extended technical documentation
-```
+### The 3-Strategy Search Engine
 
----
+Robust searching even if the query comes from a slightly garbled OCR scan:
 
-## 🤖 How the AI Works
+1. **Exact Match (O(1)):** Instant resolution if spelling is identical.
+2. **TF-IDF Search:** Converts query to vector and computes cosine similarity against the corpus. Highly effective for missing keywords.
+3. **Fuzzy Search:** Employs Levenshtein distance on all entries to elegantly handle minor typos.
 
-### Search Engine — 3 Strategies
+### Intent-Driven Natural Language Chatbot
 
-When the user types a medicine name, the search runs three strategies in order:
-
-```
-User Input
-    │
-    ▼
-① EXACT MATCH        → Checks if input matches any name_lower in database (O(1))
-    │ not found
-    ▼
-② TF-IDF SEARCH      → Vectorises query, computes cosine similarity against corpus
-    │ low confidence
-    ▼
-③ FUZZY MATCH        → Levenshtein distance on all names (handles typos, OCR errors)
-    │
-    ▼
-Result + Confidence Score + Search Strategy Label
-```
-
-The name is also checked against a synonyms dictionary so brand names like "Crocin" resolve to "Paracetamol".
-
-### Chatbot — Naive Bayes + TF-IDF
-
-The chatbot classifies the user's question into one of 14 medical intents:
-
-```
-User Message: "Is it safe to take this during pregnancy?"
-    │
-    ▼
-Preprocessing: lowercase → tokenise → remove stopwords
-    │
-    ▼
-TF-IDF Vectorise → Cosine Similarity against 799 training patterns
-    │
-    ▼
-Naive Bayes Classifier → Intent: "pregnancy" (confidence: 0.93)
-    │
-    ▼
-Response Generator → Fills template with medicine-specific data fields
-    │
-    ▼
-Response: "Paracetamol is considered safe in all trimesters..."
-```
-
-### OCR Pipeline
-
-```
-Uploaded Image
-    │
-    ▼
-Grayscale → CLAHE contrast enhancement → Adaptive threshold
-    │
-    ▼
-Deskew (Hough line detection) → Morphological noise removal
-    │
-    ▼
-Tesseract LSTM OCR → Raw text
-    │
-    ▼
-OCR error correction (0→O, 1→I) → Candidate extraction → Database search
-```
+MedBot utilizes a machine learning NLP pipeline over standard logic:
+- `Preprocessing:` Tokenization, lowercasing, and NLTK stopword removal.
+- `Vectorization:` Cosine Similarity evaluation over robust TF-IDF vectors from a rich JSON intent file.
+- `Classification:` Uses a carefully trained `sklearn` Naive Bayes classifier providing deterministic predictions.
+- `Generative UI:` Responses are processed as dynamic generator streams directly into the UI components mimicking LLM token streaming but functioning offline!
 
 ---
 
 ## ⚡ Quick Start
 
 ### Requirements
-- Python 3.9 or higher
-- Tesseract OCR (only needed for image scanning — text search works without it)
+- Python 3.9+
+- Tesseract OCR (only required for image scanning capability)
 
-### Step 1: Clone
+### 1. Zero-Config Local Setup
+
 ```bash
+# Clone the repository
 git clone https://github.com/MohammadFayasKhan/medScan.git
 cd medScan
-```
 
-### Step 2: Create virtual environment
-```bash
+# Create & activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate       # macOS / Linux
-venv\Scripts\activate.bat     # Windows
-```
+# venv\Scripts\activate.bat    # Windows
 
-### Step 3: Install Python packages
-```bash
+# Install Python packages
 pip install -r requirements.txt
 ```
 
-### Step 4: Install Tesseract (for OCR)
+### 2. Install Tesseract (For OCR Capability)
 ```bash
 # macOS
 brew install tesseract
-
-# Ubuntu / Debian
+# Ubuntu/Debian
 sudo apt install tesseract-ocr
-
-# Windows — installer at:
-# https://github.com/UB-Mannheim/tesseract/wiki
+# Windows 
+# Download Installer: https://github.com/UB-Mannheim/tesseract/wiki
 ```
 
-### Step 5: Run setup (first time only — ~5 seconds)
+### 3. Initialize Vectors (First time only)
 ```bash
 python setup.py
 ```
+*This handles initial dataset preprocessing, TF-IDF vector generation, and intent modeling.*
 
-This downloads NLTK data, trains the Naive Bayes classifier, and builds the TF-IDF search index. All artifacts are saved to `models/`.
-
-### Step 6: Launch
+### 4. Launch Application
 ```bash
 streamlit run app.py
 ```
-
-App opens at **`http://localhost:8501`**
+Access MedScan+ at **`http://localhost:8501`**
 
 ---
 
-## 🧪 Running Tests
+## 🐳 Docker Deployment
+
+The application is fully containerized. A perfect fit for isolated on-premise servers.
 
 ```bash
-# Run all 66 tests
-python -m pytest tests/ -v
+# Clone & Build
+git clone https://github.com/MohammadFayasKhan/medScan.git
+cd medScan
 
-# Run individual test files
-python -m pytest tests/test_db.py -v
-python -m pytest tests/test_search.py -v
-python -m pytest tests/test_chatbot.py -v
-python -m pytest tests/test_ocr.py -v
-python -m pytest tests/test_algorithms.py -v
-
-# With coverage report
-pip install pytest-cov
-python -m pytest tests/ --cov=modules --cov-report=term-missing
+# Build and start via Docker Compose
+docker-compose up --build
 ```
+*Port 8501 is exposed automatically.*
 
-### Test Results
+---
 
-```
+## 🧪 Testing Coverage
+
+Extensively tested verifying search boundaries and intent classification:
+```text
 ======================== 66 passed in 22.38s ========================
-
 Module                  Tests   Result   Notes
 ──────────────────────  ─────   ──────   ──────────────────────────
 test_algorithms.py       11     ✅ Pass  NB accuracy: 99.1%
 test_chatbot.py          15     ✅ Pass  All 14 intents matched
-test_db.py               16     ✅ Pass  Load, validate, query, filter
-test_ocr.py              13     ✅ Pass  Text clean + candidate extract
-test_search.py           11     ✅ Pass  Exact, TF-IDF, fuzzy, brand
+test_db.py               16     ✅ Pass  Load, validate, query
+test_ocr.py              13     ✅ Pass  Text clean / extraction
+test_search.py           11     ✅ Pass  Exact, TF-IDF, fuzzy
 ```
-
----
-
-## 💊 Medicine Database
-
-20 medicines are included, each with 27 clinical data fields:
-
-| Medicine | Category |
-|---------|---------|
-| Paracetamol | Analgesic / Antipyretic |
-| Ibuprofen | NSAID / Analgesic |
-| Amoxicillin | Beta-Lactam Antibiotic |
-| Metformin | Biguanide / Antidiabetic |
-| Hypromellose | Ophthalmic Lubricant |
-| Cetirizine | H1 Antihistamine |
-| Omeprazole | Proton Pump Inhibitor |
-| Azithromycin | Macrolide Antibiotic |
-| Amlodipine | Calcium Channel Blocker |
-| Atorvastatin | HMG-CoA Reductase Inhibitor |
-| Pantoprazole | Proton Pump Inhibitor |
-| Dextromethorphan | Antitussive |
-| Losartan | ARB / Antihypertensive |
-| Aspirin | Antiplatelet / NSAID |
-| Montelukast | Leukotriene Antagonist |
-| Salbutamol | SABA / Bronchodilator |
-| Diclofenac | NSAID / Anti-inflammatory |
-| Clonazepam | Benzodiazepine / Antiepileptic |
-| Aceclofenac | NSAID / Analgesic |
-| Cholecalciferol | Vitamin D3 / Bone Health |
-
-Each medicine includes: generic name, brand names, form, strength, mechanism, uses, indications, dosage, timing, administration tips, pregnancy warning, paediatric warning, driving warning, storage, contraindications, drug interactions, common & serious side effects, substitutes, pack sizes, and sources.
-
----
-
-## 🔒 Offline Guarantee
-
-| Check | Status |
-|-------|--------|
-| API Keys Required | ❌ None |
-| Internet at Runtime | ❌ Not Used |
-| ML Model Training | ✅ Local (setup.py) |
-| NLTK Resources | ✅ Downloaded once, cached locally |
-| OCR Engine | ✅ Tesseract runs on-device |
-| All Data Files | ✅ Stored in `data/` and `models/` |
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Language | Python 3.9+ |
-| Web Framework | Streamlit 1.50 |
-| Machine Learning | scikit-learn 1.6 (TF-IDF, Naive Bayes) |
-| NLP Toolkit | NLTK 3.9 |
-| Computer Vision | OpenCV 4.13 |
-| OCR Engine | Tesseract 5.x |
-| Fuzzy Matching | fuzzywuzzy + python-Levenshtein |
-| Data Layer | Pandas 2.3 |
-| Visualisation | Matplotlib 3.9 |
-| Model Persistence | joblib |
-| Testing | pytest 8.4 |
-| Containerisation | Docker + Docker Compose |
-
----
-
-## 🐳 Docker Deployment (Fully Offline, No Python Needed)
-
-Docker packages the entire app — Python, all libraries, Tesseract OCR, NLTK data, and trained ML models — into a single container image. Anyone with Docker installed can run it **without installing Python or any dependencies**.
-
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS / Windows)
-- Or Docker Engine (Linux)
-
-### Option A: One command with Docker Compose (recommended)
-
-```bash
-git clone https://github.com/MohammadFayasKhan/medScan.git
-cd medScan
-
-# Build the image and start the container
-docker-compose up --build
-```
-
-App opens at → **`http://localhost:8501`**
-
-To stop:
-```bash
-docker-compose down
-```
-
-### Option B: Manual Docker commands
-
-```bash
-# Build the image (takes ~3-5 minutes on first build)
-docker build -t medscan-ai .
-
-# Run the container
-docker run -p 8501:8501 medscan-ai
-```
-
-### Option C: Makefile shortcuts
-
-```bash
-make run     # Build and start with docker-compose
-make stop    # Stop the container
-make logs    # Stream container logs
-make shell   # Open bash inside the container
-make clean   # Remove image, container, and volumes
-make test    # Run the test suite locally
-```
-
-### What happens inside the Docker build
-
-```
-Step 1: Start from python:3.9-slim base image
-Step 2: apt-get install tesseract-ocr, libgl1-mesa-glx, etc.
-Step 3: pip install -r requirements.txt
-Step 4: COPY all project files
-Step 5: python setup.py → downloads NLTK, trains Naive Bayes, builds TF-IDF index
-Step 6: EXPOSE 8501
-Step 7: streamlit run app.py
-```
-
-Once the image is built, **it never needs the internet again**.
-
----
-
-## 🌐 Hugging Face Spaces (Public Online Demo)
-
-Hugging Face Spaces hosts the app at a public URL so anyone can try it **from any browser without installing anything**.
-
-### How to deploy your own Space
-
-**Step 1:** Create a free account at [huggingface.co](https://huggingface.co)
-
-**Step 2:** Go to [huggingface.co/new-space](https://huggingface.co/new-space) and fill in:
-- **Space name:** `medscan-ai`  
-- **SDK:** `Streamlit`  
-- **Visibility:** Public
-
-**Step 3:** Push this repository to your Space:
-
-```bash
-# Add HF Space as a second remote
-git remote add hf https://huggingface.co/spaces/YOUR_HF_USERNAME/medscan-ai
-
-# Push to Hugging Face
-git push hf main
-```
-
-**Step 4:** Hugging Face automatically:
-1. Reads `packages.txt` → installs `tesseract-ocr` via apt
-2. Reads `requirements.txt` → installs all Python packages
-3. Runs `streamlit run app.py`
-4. On first boot, `app.py` detects missing models and runs `setup.py` automatically
-
-Your app is live at: `https://huggingface.co/spaces/YOUR_HF_USERNAME/medscan-ai`
-
-### Key files for Hugging Face Spaces
-
-| File | Purpose |
-|------|---------|
-| `packages.txt` | System packages installed via `apt-get` (Tesseract, libgl1) |
-| `requirements.txt` | Python packages installed via `pip` |
-| `app.py` | Entry point — HF Spaces runs `streamlit run app.py` |
-| `.streamlit/config.toml` | Theme and server settings |
-
-> **Note:** HF Spaces has internet access during the build phase, so NLTK downloads and model training work automatically. The app itself runs offline once deployed.
-
----
-
-## 🔒 Offline Guarantee
-
-| Check | Status |
-|-------|--------|
-| API Keys Required | ❌ None |
-| Internet at Runtime | ❌ Not Used |
-| ML Model Training | ✅ Local (setup.py or Docker build) |
-| NLTK Resources | ✅ Downloaded once, cached locally |
-| OCR Engine | ✅ Tesseract runs on-device |
-| All Data Files | ✅ Stored in `data/` and `models/` |
-| Docker Image | ✅ Fully self-contained after build |
 
 ---
 
 ## ⚠️ Medical Disclaimer
 
-> This application is for **educational and academic purposes only**. The information provided is **not a substitute for professional medical advice**, diagnosis, or treatment. Always consult a qualified healthcare professional before taking, stopping, or changing any medication. In medical emergencies, call **108** (India) or your local emergency number.
+> This software is a technological demonstration created for **educational and portfolio purposes only**. The information provided within is **not a substitute for professional medical advice**, diagnosis, or treatment.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Developer
 
-**Mohammad Fayas Khan**
+**Mohammad Fayas Khan**  
 - GitHub: [@MohammadFayasKhan](https://github.com/MohammadFayasKhan)
-- Course: INT428 — AI Systems Design
-
----
-
-<div align="center">
-
-*Built with Python · Runs 100% Offline · Docker Ready · HF Spaces Compatible*
-
-</div>
+- Built with Python · Runs 100% Offline · Docker Ready
 

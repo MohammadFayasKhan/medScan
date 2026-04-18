@@ -268,200 +268,79 @@ def classify_intent(question: str, vectorizer,
 # ─────────────────────────────────────────────────────────────────────
 
 def _format_list(items, bullet: str = "•") -> str:
-    """Helper: format a list of items as a markdown bullet list string."""
     if not items:
         return "*Not specified*"
     if isinstance(items, str):
         items = [i.strip() for i in items.split(",") if i.strip()]
     return "\n".join(f"{bullet} {item}" for item in items if item)
 
-
 def generate_response(intent_tag: str, medicine: dict, confidence: float) -> str:
-    """
-    Generate a dynamic, contextual response from the medicine data dict.
-
-    Each intent maps to specific fields in the medicine dict.
-    All response content comes from medicine data — nothing is hardcoded.
-    Responses are formatted in Markdown for Streamlit rendering.
-
-    Args:
-        intent_tag (str): Classified intent from classify_intent().
-        medicine (dict): Full medicine data dict from the database.
-        confidence (float): Confidence score from classifier (0.0–1.0).
-
-    Returns:
-        str: Markdown-formatted response string.
-
-    Example:
-        >>> resp = generate_response("uses", med_dict, 0.85)
-        >>> "used for" in resp.lower()
-        True
-    """
-    name = medicine.get("name", "this medicine").title()
-    generic = medicine.get("generic_name", "")
+    name = str(medicine.get("name", "this medicine")).title()
+    composition = str(medicine.get("Composition", "Not specified"))
+    uses = str(medicine.get("Uses", "Not specified"))
+    side_effects = str(medicine.get("Side_effects", "Not specified"))
+    manufacturer = str(medicine.get("Manufacturer", "Not specified"))
+    
     icon = INTENT_ICONS.get(intent_tag, "💊")
 
-    # Low-confidence disclaimer appended to response
     low_conf_note = (
         "\n\n---\n*⚠️ Low confidence match. If this doesn't answer your question, "
         "try rephrasing.*"
         if confidence < 0.3 else ""
     )
 
-    # ── Intent response map ──────────────────────────────────────────
     if intent_tag == "overview":
-        features = medicine.get("features", [])
-        features_str = _format_list(features)
         return (
             f"{icon} **Overview: {name}**\n\n"
-            f"**Generic Name:** {generic}\n\n"
-            f"**Category:** {medicine.get('category', 'Not specified')}\n\n"
-            f"**Form:** {medicine.get('form', 'Not specified')}\n\n"
-            f"**Strength:** {medicine.get('strength', 'Not specified')}\n\n"
-            f"**Active Substance:** {medicine.get('active_substance', 'Not specified')}\n\n"
-            f"**Key Features:**\n{features_str}"
+            f"**Composition:** {composition}\n\n"
+            f"**Manufacturer:** {manufacturer}\n\n"
+            f"**Primary Uses:** {uses}\n\n"
             + low_conf_note
         )
 
     elif intent_tag == "uses":
-        indications = medicine.get("indications", [])
         return (
             f"{icon} **Uses of {name}**\n\n"
-            f"{medicine.get('uses', 'Not specified')}\n\n"
-            f"**Medical Indications:**\n{_format_list(indications)}"
-            + low_conf_note
-        )
-
-    elif intent_tag == "mechanism":
-        return (
-            f"{icon} **How {name} Works**\n\n"
-            f"{medicine.get('mechanism', 'Mechanism information not specified.')}"
-            + low_conf_note
-        )
-
-    elif intent_tag == "dosage":
-        return (
-            f"{icon} **Dosage & Administration of {name}**\n\n"
-            f"**Recommended Dose:**\n{medicine.get('dosage', 'Not specified')}\n\n"
-            f"**When to Take:** {medicine.get('timing', 'Not specified')}\n\n"
-            f"**Dosing Interval:** {medicine.get('spacing', 'Not specified')}\n\n"
-            f"**Administration Tips:** {medicine.get('admin_tips', 'Not specified')}"
+            f"This medicine is primarily used for:\n\n{uses}"
             + low_conf_note
         )
 
     elif intent_tag == "side_effects":
-        common = medicine.get("side_effects_common", [])
-        serious = medicine.get("side_effects_serious", [])
         return (
             f"{icon} **Side Effects of {name}**\n\n"
-            f"**Common Side Effects:**\n{_format_list(common, '🟡')}\n\n"
-            f"**Serious Side Effects (seek medical attention):**\n{_format_list(serious, '🔴')}"
+            f"Possible side effects include:\n\n{side_effects}\n\n"
+            f"*Note: Not all patients experience these. Consult your doctor if they persist.*"
             + low_conf_note
         )
 
-    elif intent_tag == "warnings":
+    elif intent_tag in ["dosage", "mechanism", "warnings", "contraindications", 
+                      "interactions", "substitutes", "pregnancy", "pediatric", 
+                      "admin_tips", "storage", "overdose"]:
         return (
-            f"{icon} **Warnings & Precautions for {name}**\n\n"
-            f"**🤰 Pregnancy:** {medicine.get('warning_pregnancy', 'Not specified')}\n\n"
-            f"**👶 Pediatric Use:** {medicine.get('warning_pediatric', 'Not specified')}\n\n"
-            f"**🚗 Driving:** {medicine.get('warning_driving', 'Not specified')}\n\n"
-            f"**🏪 Storage:** {medicine.get('warning_storage', 'Not specified')}"
+            f"{icon} **Information Unavailable**\n\n"
+            f"Specific details regarding **{intent_tag.replace('_', ' ')}** for {name} are not available in the current medical database. "
+            f"However, the composition is **{composition}**. Please consult a registered medical practitioner or pharmacist for clinical advice."
             + low_conf_note
         )
 
-    elif intent_tag == "contraindications":
-        contra = medicine.get("contraindications", [])
+    elif intent_tag == "price":
         return (
-            f"{icon} **Contraindications for {name}**\n\n"
-            f"**Do NOT use {name} if you have:**\n{_format_list(contra, '❌')}\n\n"
-            f"*Always consult your doctor before stopping any medication.*"
-            + low_conf_note
-        )
-
-    elif intent_tag == "interactions":
-        interactions = medicine.get("interactions", [])
-        return (
-            f"{icon} **Drug Interactions of {name}**\n\n"
-            f"**Known Interactions:**\n{_format_list(interactions, '⚡')}\n\n"
-            f"*Inform your doctor about all medicines, supplements, and foods you consume.*"
-            + low_conf_note
-        )
-
-    elif intent_tag == "substitutes":
-        substitutes = medicine.get("substitutes", [])
-        return (
-            f"{icon} **Alternatives to {name}**\n\n"
-            f"**Possible Substitutes:**\n{_format_list(substitutes, '🔄')}\n\n"
-            f"⚠️ *Disclaimer: Do not switch medications without consulting your doctor or pharmacist. "
-            f"Therapeutic equivalence varies by patient condition.*"
-            + low_conf_note
-        )
-
-    elif intent_tag == "pregnancy":
-        return (
-            f"{icon} **{name} During Pregnancy & Breastfeeding**\n\n"
-            f"**Pregnancy Safety:**\n{medicine.get('warning_pregnancy', 'Not specified')}\n\n"
-            f"*Always consult your obstetrician or GP before taking any medicine during pregnancy.*"
-            + low_conf_note
-        )
-
-    elif intent_tag == "pediatric":
-        return (
-            f"{icon} **{name} in Children**\n\n"
-            f"**Pediatric Use:**\n{medicine.get('warning_pediatric', 'Not specified')}\n\n"
-            f"*Always consult a pediatrician for appropriate dosing in children.*"
-            + low_conf_note
-        )
-
-    elif intent_tag == "admin_tips":
-        return (
-            f"{icon} **How to Take {name}**\n\n"
-            f"**Administration Instructions:**\n{medicine.get('admin_tips', 'Not specified')}\n\n"
-            f"**Timing:** {medicine.get('timing', 'Not specified')}\n\n"
-            f"**Dosing Interval:** {medicine.get('spacing', 'Not specified')}"
-            + low_conf_note
-        )
-
-    elif intent_tag == "storage":
-        return (
-            f"{icon} **Storage Instructions for {name}**\n\n"
-            f"{medicine.get('warning_storage', 'Not specified')}"
-            + low_conf_note
-        )
-
-    elif intent_tag == "overdose":
-        dosage = medicine.get("dosage", "")
-        return (
-            f"{icon} **OVERDOSE — {name}**\n\n"
-            f"**⚠️ If you have taken more than the prescribed amount:**\n\n"
-            f"1. **Stop taking the medicine immediately**\n"
-            f"2. **Call emergency services (108/112) or go to your nearest hospital**\n"
-            f"3. **Do NOT try to induce vomiting unless specifically advised**\n\n"
-            f"**Prescribed Dose for Reference:**\n{dosage}\n\n"
-            f"🆘 *This is a medical emergency. Contact Poison Control or emergency services immediately.*"
+            f"💰 **Pricing Information**\n\n"
+            f"Pricing information for **{name}** is not available in the offline database as prices fluctuate frequently. "
+            f"Please check your local pharmacy for the most accurate and current pricing."
             + low_conf_note
         )
 
     else:
-        # Unknown intent — show helpful categories list
         return (
             f"❓ **I'm not sure about that question.**\n\n"
-            f"I can answer questions about **{name}** in these areas:\n\n"
-            "• 💊 **Overview** — what type of medicine this is\n"
+            f"I can reliably answer questions about **{name}** in these areas:\n\n"
+            "• 💊 **Overview** — composition and general info\n"
             "• 🎯 **Uses** — what conditions it treats\n"
-            "• ⚙️ **Mechanism** — how it works in the body\n"
-            "• 💉 **Dosage** — how much and how often\n"
-            "• ⚠️ **Side Effects** — common and serious reactions\n"
-            "• 🚨 **Warnings** — pregnancy, children, driving\n"
-            "• 🚫 **Contraindications** — who cannot take this\n"
-            "• 🔗 **Interactions** — drug and food interactions\n"
-            "• 🔄 **Substitutes** — alternative medicines\n"
-            "• 📋 **How to Take** — administration instructions\n"
-            "• 🏪 **Storage** — how to store this medicine\n"
-            "• 🆘 **Overdose** — what to do if too much taken\n\n"
-            "*Try asking: 'What are the side effects?' or 'How should I take this?'*"
+            "• ⚠️ **Side Effects** — known reactions\n"
+            "• 💰 **Price** — cost information\n\n"
+            "*Try asking: 'What are the side effects?' or 'What is this used for?'*"
         )
-
 
 # ─────────────────────────────────────────────────────────────────────
 # MASTER CHATBOT FUNCTION
@@ -469,37 +348,8 @@ def generate_response(intent_tag: str, medicine: dict, confidence: float) -> str
 
 def get_chat_response(user_input: str, medicine: dict,
                       vectorizer, matrix, intent_labels: list) -> dict:
-    """
-    Master chatbot entry point — called by chatbot_ui.py on every message.
-
-    Orchestrates intent classification and response generation.
-    Returns a structured result dict with all metadata for UI rendering.
-
-    Args:
-        user_input (str): Raw user question string.
-        medicine (dict): Currently displayed medicine data dict.
-        vectorizer: Fitted TF-IDF vectoriser from build_intent_index.
-        matrix: TF-IDF pattern matrix from build_intent_index.
-        intent_labels (list[str]): Intent labels list from build_intent_index.
-
-    Returns:
-        dict: Chat response with keys:
-            {
-              "response": str,           # Markdown-formatted response text
-              "intent": str,             # Detected intent tag
-              "confidence": float,       # 0.0–1.0 similarity score
-              "low_confidence": bool,    # True if confidence < 0.3
-              "response_time_ms": float  # Processing time in milliseconds
-            }
-
-    Example:
-        >>> result = get_chat_response("what are side effects", med, vec, mat, labels)
-        >>> result["intent"]
-        'side_effects'
-    """
     start_time = time.perf_counter()
 
-    # Handle empty or whitespace-only input
     if not user_input or not user_input.strip():
         return {
             "response": "Please type a question about the medicine.",
@@ -509,7 +359,6 @@ def get_chat_response(user_input: str, medicine: dict,
             "response_time_ms": 0.0
         }
 
-    # Handle case where no medicine is currently selected
     if not medicine:
         return {
             "response": (
@@ -522,16 +371,14 @@ def get_chat_response(user_input: str, medicine: dict,
             "low_confidence": True,
             "response_time_ms": 0.0
         }
+        
+    # Hack for price intent since it's a new injection
+    if "price" in user_input.lower() or "cost" in user_input.lower():
+        intent_tag, confidence = "price", 1.0
+    else:
+        intent_tag, confidence = classify_intent(user_input, vectorizer, matrix, intent_labels)
 
-    # ── Step 1: Classify user question into an intent ────────────────
-    intent_tag, confidence = classify_intent(
-        user_input, vectorizer, matrix, intent_labels
-    )
-
-    # ── Step 2: Generate contextual response from medicine data ───────
     response_text = generate_response(intent_tag, medicine, confidence)
-
-    # ── Step 3: Calculate total processing time ───────────────────────
     elapsed_ms = (time.perf_counter() - start_time) * 1000
 
     logger.info(
@@ -546,3 +393,9 @@ def get_chat_response(user_input: str, medicine: dict,
         "low_confidence": confidence < 0.3,
         "response_time_ms": elapsed_ms
     }
+
+def stream_response(text: str):
+    """Generator to simulate typing animation for st.write_stream"""
+    for chunk in text.split(" "):
+        yield chunk + " "
+        time.sleep(0.04)

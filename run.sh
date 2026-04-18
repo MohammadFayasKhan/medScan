@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  MEDSCAN AI — ANTIGRAVITY BUILD"
+echo "  MEDSCAN AI — OFFLINE BUILD"
 echo "  Offline Medicine Intelligence System"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

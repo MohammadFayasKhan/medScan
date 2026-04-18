@@ -94,12 +94,11 @@ def main():
 
     # ── Step 3: Verify data files ──────────────────────────────────────
     print("[3/6] Verifying data files...")
-    db_path = os.path.join(PROJECT_ROOT, "data", "medicines.csv")
+    from modules.medicine_db import DB_PATH
     intents_path = os.path.join(PROJECT_ROOT, "data", "intents.json")
 
-    if not os.path.exists(db_path):
-        print(f"  ✗ medicines.csv not found at {db_path}")
-        print("    Please ensure data/medicines.csv exists. See DATASET_GUIDE.md.")
+    if not os.path.exists(DB_PATH):
+        print(f"  ✗ Medicine database not found at {DB_PATH}")
         sys.exit(1)
 
     if not os.path.exists(intents_path):
@@ -111,21 +110,8 @@ def main():
     # ── Step 4: Load medicine database ────────────────────────────────
     print("[4/6] Loading medicine database...")
     try:
-        import pandas as pd
-        from modules.medicine_db import load_database, build_search_corpus
-
-        # Bypass Streamlit cache for setup script
-        df = pd.read_csv(db_path, encoding="utf-8")
-        df = df.fillna("Not specified")
-        for col in ["brand_names", "features", "contraindications", "interactions",
-                    "side_effects_common", "side_effects_serious", "substitutes",
-                    "pack_sizes", "sources", "indications"]:
-            if col in df.columns:
-                df[col] = df[col].apply(
-                    lambda x: [item.strip() for item in str(x).split(",")]
-                    if str(x) not in ("Not specified", "nan") else []
-                )
-        df["name_lower"] = df["name"].str.lower().str.strip()
+        from modules.medicine_db import load_database
+        df = load_database(DB_PATH)
         print(f"✓ Database loaded: {len(df)} medicines")
     except Exception as e:
         print(f"  ✗ Database load failed: {e}")
@@ -135,21 +121,16 @@ def main():
     print("[5/6] Training Naive Bayes intent classifier...")
     try:
         from modules.chatbot import load_intents
-        from modules.intent_classifier import (
-            prepare_training_data, train_classifier, save_models
-        )
+        from modules.intent_classifier import prepare_training_data, train_classifier, save_models
 
         intents = load_intents(intents_path)
         X, y = prepare_training_data(intents)
         vectorizer, classifier, label_encoder = train_classifier(X, y)
         save_models(vectorizer, classifier, label_encoder)
 
-        # Quick accuracy report on training data
         from sklearn.metrics import accuracy_score
         X_vec = vectorizer.transform(X)
-        from sklearn.preprocessing import LabelEncoder
-        le = label_encoder
-        y_enc = le.transform(y)
+        y_enc = label_encoder.transform(y)
         preds = classifier.predict(X_vec)
         acc = accuracy_score(y_enc, preds)
         print(f"✓ Naive Bayes trained (training accuracy: {acc*100:.1f}%)")
@@ -164,29 +145,12 @@ def main():
     print("[6/6] Building TF-IDF medicine search index...")
     try:
         import joblib
-
-        # Build combined text corpus from medicine fields
-        list_cols = ["brand_names", "features", "indications", "substitutes"]
-        corpus = []
-        for _, row in df.iterrows():
-            name_boost = f"{row['name']} {row['name']} {row['name']}"
-            brands = " ".join(row.get("brand_names", [])) if isinstance(row.get("brand_names"), list) else str(row.get("brand_names", ""))
-            indications = " ".join(row.get("indications", [])) if isinstance(row.get("indications"), list) else str(row.get("indications", ""))
-            doc = " ".join([
-                name_boost,
-                str(row.get("generic_name", "")),
-                brands,
-                str(row.get("active_substance", "")),
-                str(row.get("category", "")),
-                str(row.get("uses", "")),
-                indications,
-            ])
-            corpus.append(doc)
-
+        from modules.medicine_db import build_search_corpus
         from modules.medicine_search import build_search_index
+
+        corpus = build_search_corpus(df)
         search_vec, search_mat = build_search_index(corpus)
 
-        # Save search index
         models_dir = os.path.join(PROJECT_ROOT, "models")
         search_index_path = os.path.join(models_dir, "search_index.pkl")
         joblib.dump((search_vec, search_mat), search_index_path)
@@ -207,10 +171,8 @@ def main():
     print("  TO LAUNCH MEDSCAN AI:")
     print("  streamlit run app.py")
     print()
-    print("  App will open at: http://localhost:8501")
     print("═" * 60)
     print()
-
 
 if __name__ == "__main__":
     main()

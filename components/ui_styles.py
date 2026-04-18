@@ -247,22 +247,7 @@ html, body, [data-testid="stApp"] {
   text-transform: uppercase;
 }
 
-.antigravity-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.8rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(255,107,53,0.12));
-  border: 1px solid rgba(0,212,255,0.3);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  font-weight: 600;
-}
 
-.badge-ag { color: var(--accent); }
-.badge-build { color: var(--accent2); }
 
 /* ═══════════════════════════════════════════════════════════════════
    MEDICINE HEADER CARD

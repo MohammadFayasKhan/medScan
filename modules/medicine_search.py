@@ -155,79 +155,41 @@ def build_search_index(corpus: list) -> tuple:
 # ─────────────────────────────────────────────────────────────────────
 
 def exact_search(df: pd.DataFrame, query: str, synonyms: dict = None) -> dict:
-    """
-    Try exact and prefix string matches on medicine names and brand names.
-
-    This is the fastest strategy — O(n) linear scan through the DataFrame.
-    Should be tried first before more expensive TF-IDF or fuzzy searches.
-
-    Search priority:
-      1. Synonym lookup (brand → generic resolution)
-      2. Exact match on name_lower
-      3. name_lower starts with query
-      4. Query is a substring of name_lower
-      5. Generic name contains query
-      6. Any brand name contains query
-
-    Args:
-        df (pd.DataFrame): Processed medicine DataFrame.
-        query (str): User input string to search for.
-        synonyms (dict): Brand→generic name mapping. If None, loads fresh.
-
-    Returns:
-        dict | None: Full medicine record dict if found, else None.
-
-    Example:
-        >>> result = exact_search(df, "paracetamol")
-        >>> result["name"]
-        'paracetamol'
-    """
     if not query:
         return None
 
-    # Load synonyms if not provided
     if synonyms is None:
         synonyms = load_synonyms()
 
-    # Normalise: lowercase, strip, remove extra spaces
     q = query.lower().strip()
 
-    # Priority 0: Synonym resolution — e.g., "eyemist" → "hypromellose"
+    # Synonym resolution
     if q in synonyms:
         resolved = synonyms[q]
-        result = exact_search(df, resolved, synonyms={})  # recursive with resolved key
+        result = exact_search(df, resolved, synonyms={})
         if result:
             logger.debug(f"Synonym resolved: '{q}' → '{resolved}'")
             return result
 
-    # Priority 1: Exact name match
+    # Exact name match
     exact = df[df["name_lower"] == q]
     if not exact.empty:
         return exact.iloc[0].to_dict()
 
-    # Priority 2: Name starts with query (prefix match)
+    # Prefix match
     prefix = df[df["name_lower"].str.startswith(q, na=False)]
     if not prefix.empty:
         return prefix.iloc[0].to_dict()
 
-    # Priority 3: Name contains query as substring
+    # Substring
     contains = df[df["name_lower"].str.contains(q, na=False, regex=False)]
     if not contains.empty:
         return contains.iloc[0].to_dict()
 
-    # Priority 4: Generic name (lowercase) contains query
+    # Generic name
     generic = df[df["generic_name"].str.lower().str.contains(q, na=False, regex=False)]
     if not generic.empty:
         return generic.iloc[0].to_dict()
-
-    # Priority 5: Any brand name in brand_names list contains query
-    for _, row in df.iterrows():
-        brands = row.get("brand_names", [])
-        if isinstance(brands, list):
-            if any(q in b.lower() for b in brands):
-                return row.to_dict()
-        elif q in str(brands).lower():
-            return row.to_dict()
 
     return None
 
@@ -238,60 +200,24 @@ def exact_search(df: pd.DataFrame, query: str, synonyms: dict = None) -> dict:
 
 def tfidf_search(query: str, vectorizer, matrix,
                  df: pd.DataFrame, top_n: int = 3) -> list:
-    """
-    Semantic search using TF-IDF cosine similarity.
-
-    Transforms the query into its TF-IDF vector representation and computes
-    cosine similarity against all medicine vectors in the index.
-    Higher similarity score = more semantically related to query.
-
-    Formula: similarity(A, B) = (A·B) / (|A| × |B|)
-    where A = query vector, B = medicine document vector.
-
-    Args:
-        query (str): Search query string.
-        vectorizer (TfidfVectorizer): Fitted TF-IDF vectoriser from build_search_index.
-        matrix: TF-IDF matrix (scipy sparse) from build_search_index.
-        df (pd.DataFrame): Processed medicine DataFrame (for retrieving records).
-        top_n (int): Number of top results to return. Default 3.
-
-    Returns:
-        list[dict]: List of {medicine_dict, score} dicts sorted by score descending.
-                    Only results with score > TFIDF_THRESHOLD are included.
-
-    Example:
-        >>> results = tfidf_search("fever headache", vectorizer, matrix, df)
-        >>> results[0]["score"] > 0.15
-        True
-    """
     if vectorizer is None or matrix is None:
         return []
 
     try:
-        # Transform query string into TF-IDF vector (1 × vocab_size matrix)
         query_vector = vectorizer.transform([query.lower()])
-
-        # Compute cosine similarity between query and all medicine documents
-        # Result shape: (1, num_medicines) → flatten to 1D array
         similarities = cosine_similarity(query_vector, matrix).flatten()
-
-        # Get indices of top_n highest similarity scores (descending order)
         top_indices = np.argsort(similarities)[::-1][:top_n]
 
         results = []
         for idx in top_indices:
             score = float(similarities[idx])
-
-            # Only include results above the similarity threshold
             if score < TFIDF_THRESHOLD:
                 continue
 
-            # Retrieve the medicine record at this index
             medicine = df.iloc[int(idx)].to_dict()
             results.append({"medicine": medicine, "score": score})
 
         return results
-
     except Exception as e:
         logger.warning(f"TF-IDF search error: {e}")
         return []
@@ -303,85 +229,41 @@ def tfidf_search(query: str, vectorizer, matrix,
 
 def fuzzy_search(df: pd.DataFrame, query: str) -> list:
     """
-    Fuzzy string matching to handle OCR errors, typos, and near-misses.
-
-    Uses fuzzywuzzy's Levenshtein distance metric to find medicine names
-    that are similar (but not identical) to the query string.
-    Searches across all name variants: medicine names, brand names, generics.
-
-    Example OCR errors handled:
-      "paracetaml" → "paracetamol" (missing letter)
-      "paracetam0l" → "paracetamol" (0 instead of O)
-      "ibuprofin" → "ibuprofen" (spelling error)
-
-    Args:
-        df (pd.DataFrame): Processed medicine DataFrame.
-        query (str): Search string (possibly with typos/OCR errors).
-
-    Returns:
-        list[dict]: List of {medicine, score, matched_on} dicts,
-                    sorted by score descending.
-                    Only results with score > FUZZY_THRESHOLD included.
-
-    Example:
-        >>> results = fuzzy_search(df, "paracetaml")
-        >>> results[0]["medicine"]["name"]
-        'paracetamol'
+    Fuzzy string matching on the 11k database.
+    Since 11,800 rows is expensive for full Levenshtein, this is kept simple.
     """
-    if not query:
-        return []
+    if not query or len(query) < 4:
+        return []  # Fuzzy search on <4 chars across 11k DB is useless/noisy
 
-    # Build a flat list of all name variants with their back-references
-    # Each entry: (display_name, medicine_df_index, matched_field)
-    name_list = []
-    for idx, row in df.iterrows():
-        # Add primary name
-        name_list.append((str(row["name"]), idx, "name"))
-
-        # Add generic name
-        if row.get("generic_name"):
-            name_list.append((str(row["generic_name"]).split("/")[0].strip(), idx, "generic_name"))
-
-        # Add each brand name individually
-        brands = row.get("brand_names", [])
-        if isinstance(brands, list):
-            for brand in brands[:3]:  # limit to first 3 brands per medicine
-                if brand and len(brand) > 3:
-                    name_list.append((brand.strip(), idx, "brand_names"))
-
-    # Extract just the name strings for fuzzywuzzy
-    name_strings = [n[0] for n in name_list]
-
-    # Run fuzzy extraction: finds best matches above score cutoff
-    # token_set_ratio handles word reordering; partial_ratio handles substrings
+    # Use rapidfuzz/fuzzywuzzy to extract best from name col
+    name_strings = df['name'].tolist()
+    
     matches = fuzz_process.extractBests(
         query,
         name_strings,
         scorer=fuzz.token_set_ratio,
         score_cutoff=FUZZY_THRESHOLD,
-        limit=10
+        limit=5
     )
 
     if not matches:
         return []
 
     results = []
-    seen_indices = set()
-
+    seen = set()
     for matched_name, score in matches:
-        # Find the original entry for this matched name string
-        for name_str, df_idx, field in name_list:
-            if name_str == matched_name and df_idx not in seen_indices:
-                medicine = df.iloc[df_idx].to_dict()
+        # Get first df item that matches this name
+        row = df[df['name'] == matched_name]
+        if not row.empty:
+            idx = row.index[0]
+            if idx not in seen:
                 results.append({
-                    "medicine": medicine,
+                    "medicine": row.iloc[0].to_dict(),
                     "score": score,
-                    "matched_on": field
+                    "matched_on": "name"
                 })
-                seen_indices.add(df_idx)
-                break
+                seen.add(idx)
 
-    # Sort by score descending
     results.sort(key=lambda x: x["score"], reverse=True)
     return results
 

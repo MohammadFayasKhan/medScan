@@ -275,7 +275,7 @@ hero_html = """
       </div>
       <div class="hero-subtitle">Offline Medicine Intelligence System</div>
     </div>
-    <div class="antigravity-badge">
+    
       <span class="badge-ag">INT428</span>&nbsp;<span class="badge-build">AI SYSTEMS</span>
     </div>
   </div>

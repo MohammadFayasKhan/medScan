@@ -37,135 +37,86 @@ import io
 
 def render_scan_hero() -> None:
     """
-    Render the pulsing scan circle hero section shown when no medicine is loaded.
-    Displayed before any search or scan is performed.
+    Render the minimalist hero text shown when no medicine is loaded.
+    Matches MedScan+ screenshot aesthetic.
     """
     st.markdown(
-        '<div class="scan-hero">'
-        '<div class="scan-circle">💊</div>'
-        '<div class="scan-title">Scan or Search a Medicine</div>'
-        '<div class="scan-subtitle">'
-        'UPLOAD AN IMAGE · TYPE A NAME · INSTANT OFFLINE IDENTIFICATION'
-        '</div>'
+        '<div class="scan-hero" style="text-align: center; margin-top: 2rem;">'
+        '<h1 style="font-family: var(--font-display); font-size: 3rem; font-weight: 800; color: #fff; margin-bottom:0.2rem;">MedScan+</h1>'
+        '<p style="font-family: var(--font-ui); font-size: 1.1rem; color: #94a3b8; margin-bottom: 2rem;">Identify medicines instantly</p>'
         '</div>',
         unsafe_allow_html=True
     )
 
 
 def render_scan_interface(df: pd.DataFrame, vectorizer, matrix) -> None:
-    """
-    Render the full scan/search interface and handle all user interactions.
-
-    Manages:
-      - Scan mode radio selection
-      - File uploader + OCR pipeline for image mode
-      - Text input + multi-strategy search for text mode
-      - Results display (medicine card + sections + chatbot)
-      - Not-found state with suggestions
-
-    Args:
-        df (pd.DataFrame): Loaded medicine DataFrame.
-        vectorizer: Fitted TF-IDF search vectoriser.
-        matrix: TF-IDF search matrix.
-    """
     from modules.medicine_search import search_medicine
     from modules.ocr_engine import run_ocr_pipeline
     from components.medicine_card import render_medicine_header, render_search_strategy_badge
     from components.info_sections import render_all_sections
     from components.chatbot_ui import render_chatbot
 
+    if not st.session_state.get("current_medicine"):
+        render_scan_hero()
+
     # ── Scan Mode Selector ────────────────────────────────────────────
-    st.markdown(
-        '<div class="section-header">■ SCAN MODE</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="section-header" style="text-align:center; border:none; color: var(--muted);">CHOOSE INPUT METHOD</div>', unsafe_allow_html=True)
 
     scan_mode = st.radio(
         label="Choose input method:",
-        options=["📷 Upload Image", "⌨️ Type Name"],
+        options=["📷 Camera", "📁 Upload", "⌨️ Type"],
         horizontal=True,
         key="scan_mode_radio",
         label_visibility="collapsed"
     )
-    st.session_state.scan_mode = "upload" if "Upload" in scan_mode else "text"
 
-    st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════════════════════
-    # MODE A: IMAGE UPLOAD + OCR
+    # MODE A/B: CAMERA OR IMAGE UPLOAD + OCR
     # ══════════════════════════════════════════════════════════════════
-    if st.session_state.scan_mode == "upload":
-        st.markdown(
-            '<div style="font-family:var(--font-mono);font-size:0.72rem;'
-            'color:var(--muted);margin-bottom:0.5rem;">'
-            'Upload a clear photo of a medicine package, box, or strip label.'
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-        uploaded_file = st.file_uploader(
-            label="Upload medicine image",
-            type=["jpg", "jpeg", "png", "webp"],
-            key="image_uploader",
-            label_visibility="collapsed",
-            help="Supported: JPG, PNG, WEBP. Ensure text is clearly visible."
-        )
+    if "Camera" in scan_mode or "Upload" in scan_mode:
+        uploaded_file = None
+        
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            if "Camera" in scan_mode:
+                uploaded_file = st.camera_input("Point camera at a medicine package", label_visibility="collapsed")
+            else:
+                uploaded_file = st.file_uploader(
+                    label="Upload medicine image",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    key="image_uploader",
+                    label_visibility="collapsed"
+                )
 
         if uploaded_file:
-            # ── File size check (warn if > 10MB) ─────────────────────
-            file_size_mb = uploaded_file.size / (1024 * 1024)
-            if file_size_mb > 10:
-                st.warning(
-                    f"⚠️ Large image ({file_size_mb:.1f}MB). "
-                    "Processing may be slow. Consider using a smaller image for faster OCR."
-                )
-
-            # ── Show small image preview ───────────────────────────────
             col_img, col_info = st.columns([1, 2])
             with col_img:
-                # Reset file position after size check read
-                uploaded_file.seek(0)
                 try:
-                    preview_img = Image.open(io.BytesIO(uploaded_file.read()))
-                    st.image(preview_img, caption="Uploaded Image", use_container_width=True)
-                    uploaded_file.seek(0)
+                    preview_img = Image.open(io.BytesIO(uploaded_file.getvalue()))
+                    st.image(preview_img, use_container_width=True)
                 except Exception:
                     st.warning("Could not preview image.")
-                    uploaded_file.seek(0)
 
             with col_info:
-                st.markdown(
-                    f'<div class="info-card">'
-                    f'<div class="info-card-title">📋 FILE INFO</div>'
-                    f'<div class="info-row"><span class="info-label">Name</span>'
-                    f'<span class="info-value">{uploaded_file.name}</span></div>'
-                    f'<div class="info-row"><span class="info-label">Size</span>'
-                    f'<span class="info-value">{file_size_mb:.2f} MB</span></div>'
-                    f'<div class="info-row"><span class="info-label">Type</span>'
-                    f'<span class="info-value">{uploaded_file.type}</span></div>'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
-                scan_btn = st.button("▶ SCAN IMAGE", use_container_width=True, key="scan_btn")
+                scan_btn = st.button("SCAN", use_container_width=True, key="scan_btn")
 
-            # ── Run OCR on button click ────────────────────────────────
             if scan_btn:
-                with st.spinner("🔍 Running OCR pipeline..."):
+                with st.spinner("Building monograph..."):
                     uploaded_file.seek(0)
                     ocr_result = run_ocr_pipeline(uploaded_file)
                     st.session_state.ocr_result = ocr_result
 
-            # ── Display OCR Results ────────────────────────────────────
             if st.session_state.get("ocr_result"):
-                render_ocr_results(
-                    st.session_state.ocr_result,
-                    df, vectorizer, matrix
-                )
-
+                render_ocr_results(st.session_state.ocr_result, df, vectorizer, matrix)
         else:
-            # No file uploaded yet — show hero
-            if not st.session_state.get("current_medicine"):
-                render_scan_hero()
+            st.markdown(
+                '<div style="text-align:center; font-family:var(--font-ui); font-size:0.9rem; color:var(--muted); margin-top: 1rem;">'
+                'Point your camera at a medicine package to get<br>detailed information about the medication'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
     # ══════════════════════════════════════════════════════════════════
     # MODE B: TEXT SEARCH
