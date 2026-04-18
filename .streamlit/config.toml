@@ -8,8 +8,11 @@ font = "sans serif"
 
 [server]
 headless = true
-enableCORS = false
 port = 8501
+# enableCORS must be true when enableXsrfProtection is true (Streamlit default)
+# Setting both correctly here prevents the CORS warning in logs
+enableCORS = true
+enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false

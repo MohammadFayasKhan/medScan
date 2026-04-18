@@ -45,6 +45,41 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # ─────────────────────────────────────────────────────────────────────
+# AUTO-SETUP
+# On Hugging Face Spaces and fresh Docker containers, setup.py has not
+# been run yet — the models/ directory will be empty.
+# We detect this and run setup automatically before proceeding.
+# On subsequent launches, models are already present and this is skipped.
+# ─────────────────────────────────────────────────────────────────────
+MODELS_DIR = os.path.join(PROJECT_ROOT, "models")
+MODEL_FILES = ["intent_classifier.pkl", "search_index.pkl", "tfidf_vectorizer.pkl"]
+
+def _models_are_missing() -> bool:
+    """Return True if any required model file is absent from models/."""
+    return any(
+        not os.path.exists(os.path.join(MODELS_DIR, fname))
+        for fname in MODEL_FILES
+    )
+
+if _models_are_missing():
+    # Models not found — run setup.py to train and save them
+    # This happens automatically on Hugging Face Spaces (first boot) and
+    # in fresh Docker containers that didn't run `python setup.py` at build time.
+    import subprocess, sys as _sys
+    _result = subprocess.run(
+        [_sys.executable, os.path.join(PROJECT_ROOT, "setup.py")],
+        capture_output=False
+    )
+    if _result.returncode != 0:
+        # Setup failed — show a clear error and stop here
+        import streamlit as _st
+        _st.error(
+            "❌ **First-time setup failed.** Please run `python setup.py` manually "
+            "and restart the app."
+        )
+        _st.stop()
+
+# ─────────────────────────────────────────────────────────────────────
 # IMPORTS — MODULES
 # ─────────────────────────────────────────────────────────────────────
 from modules.preprocessor import download_nltk_resources

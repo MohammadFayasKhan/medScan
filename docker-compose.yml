@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — MedScan AI
+# ─────────────────────────────────────────────────────────────────────────────
+# One-command launch for MedScan AI using Docker Compose.
+#
+# Usage:
+#   docker-compose up --build    # First time: build image and start
+#   docker-compose up            # Subsequent runs: start without rebuilding
+#   docker-compose down          # Stop and remove the container
+#   docker-compose logs -f       # Stream logs from the running container
+#
+# The app will be available at: http://localhost:8501
+#
+# Author: Mohammad Fayas Khan
+# Course: INT428 — AI Systems Design
+# ─────────────────────────────────────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+  medscan-ai:
+    # Build from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Name the running container for easy identification
+    container_name: medscan_ai_app
+
+    # Map host port 8501 → container port 8501
+    # Access the app at: http://localhost:8501
+    ports:
+      - "8501:8501"
+
+    # Mount the data directory as a volume so you can update medicines.csv
+    # without rebuilding the entire Docker image
+    volumes:
+      - ./data:/app/data:ro          # read-only: data files
+      - medscan_models:/app/models   # named volume: persists trained models
+
+    # Environment variables for the container
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
+    # Restart policy: restart the container automatically if it crashes
+    restart: unless-stopped
+
+    # Docker healthcheck — verify Streamlit is responding
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# Named volumes — Docker manages these outside the project directory
+# Models are persisted here so they survive container restarts
+volumes:
+  medscan_models:
+    driver: local

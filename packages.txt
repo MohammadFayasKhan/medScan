@@ -1,0 +1,12 @@
+# System-level packages needed by Hugging Face Spaces
+# These are installed via apt-get before the Python environment is set up.
+#
+# tesseract-ocr     : The Tesseract OCR engine for reading text from images
+# tesseract-ocr-eng : English language data pack for Tesseract
+# libgl1-mesa-glx   : OpenGL runtime required by OpenCV (cv2)
+# libglib2.0-0      : GLib runtime required by OpenCV
+
+tesseract-ocr
+tesseract-ocr-eng
+libgl1-mesa-glx
+libglib2.0-0

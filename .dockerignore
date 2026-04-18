@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .dockerignore — MedScan AI
+# ─────────────────────────────────────────────────────────────────────────────
+# Files and directories that should NOT be copied into the Docker image.
+# This keeps the image lean and avoids accidentally including dev-only files.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Version Control ────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Python Cache ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual Environments ───────────────────────────────────────────────────
+venv/
+env/
+.venv/
+ENV/
+
+# ── Pre-built Models ───────────────────────────────────────────────────────
+# These are rebuilt inside the container during docker build (by setup.py)
+# Including stale local models could cause version mismatches
+models/
+*.pkl
+*.joblib
+
+# ── Test Files ─────────────────────────────────────────────────────────────
+# Tests are only needed for development, not in production Docker image
+.pytest_cache/
+tests/
+.coverage
+htmlcov/
+
+# ── Documentation ──────────────────────────────────────────────────────────
+# README and docs are not needed at runtime in the container
+*.md
+docs/
+
+# ── macOS ──────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+
+# ── IDE / Editor ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*~
+
+# ── Docker files themselves ────────────────────────────────────────────────
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# ── OS-specific launchers (not needed inside container) ───────────────────
+run.bat
+run.sh
+Makefile

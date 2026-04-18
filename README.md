@@ -53,6 +53,10 @@ medscan_ai/
 ├── app.py                       # Main entry point — Streamlit 3-tab dashboard
 ├── setup.py                     # First-time setup: downloads NLTK, trains models
 ├── requirements.txt             # All Python package dependencies
+├── packages.txt                 # System packages for Hugging Face Spaces (apt-get)
+├── Dockerfile                   # Builds a fully self-contained Docker image
+├── docker-compose.yml           # One-command Docker launch with volume persistence
+├── Makefile                     # Shortcuts: make run, make stop, make test, etc.
 ├── run.sh / run.bat             # Launch shortcuts for Linux/Mac and Windows
 │
 ├── modules/                     # Core logic — all AI/NLP processing lives here
@@ -312,6 +316,127 @@ Each medicine includes: generic name, brand names, form, strength, mechanism, us
 | Visualisation | Matplotlib 3.9 |
 | Model Persistence | joblib |
 | Testing | pytest 8.4 |
+| Containerisation | Docker + Docker Compose |
+
+---
+
+## 🐳 Docker Deployment (Fully Offline, No Python Needed)
+
+Docker packages the entire app — Python, all libraries, Tesseract OCR, NLTK data, and trained ML models — into a single container image. Anyone with Docker installed can run it **without installing Python or any dependencies**.
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS / Windows)
+- Or Docker Engine (Linux)
+
+### Option A: One command with Docker Compose (recommended)
+
+```bash
+git clone https://github.com/MohammadFayasKhan/medScan.git
+cd medScan
+
+# Build the image and start the container
+docker-compose up --build
+```
+
+App opens at → **`http://localhost:8501`**
+
+To stop:
+```bash
+docker-compose down
+```
+
+### Option B: Manual Docker commands
+
+```bash
+# Build the image (takes ~3-5 minutes on first build)
+docker build -t medscan-ai .
+
+# Run the container
+docker run -p 8501:8501 medscan-ai
+```
+
+### Option C: Makefile shortcuts
+
+```bash
+make run     # Build and start with docker-compose
+make stop    # Stop the container
+make logs    # Stream container logs
+make shell   # Open bash inside the container
+make clean   # Remove image, container, and volumes
+make test    # Run the test suite locally
+```
+
+### What happens inside the Docker build
+
+```
+Step 1: Start from python:3.9-slim base image
+Step 2: apt-get install tesseract-ocr, libgl1-mesa-glx, etc.
+Step 3: pip install -r requirements.txt
+Step 4: COPY all project files
+Step 5: python setup.py → downloads NLTK, trains Naive Bayes, builds TF-IDF index
+Step 6: EXPOSE 8501
+Step 7: streamlit run app.py
+```
+
+Once the image is built, **it never needs the internet again**.
+
+---
+
+## 🌐 Hugging Face Spaces (Public Online Demo)
+
+Hugging Face Spaces hosts the app at a public URL so anyone can try it **from any browser without installing anything**.
+
+### How to deploy your own Space
+
+**Step 1:** Create a free account at [huggingface.co](https://huggingface.co)
+
+**Step 2:** Go to [huggingface.co/new-space](https://huggingface.co/new-space) and fill in:
+- **Space name:** `medscan-ai`  
+- **SDK:** `Streamlit`  
+- **Visibility:** Public
+
+**Step 3:** Push this repository to your Space:
+
+```bash
+# Add HF Space as a second remote
+git remote add hf https://huggingface.co/spaces/YOUR_HF_USERNAME/medscan-ai
+
+# Push to Hugging Face
+git push hf main
+```
+
+**Step 4:** Hugging Face automatically:
+1. Reads `packages.txt` → installs `tesseract-ocr` via apt
+2. Reads `requirements.txt` → installs all Python packages
+3. Runs `streamlit run app.py`
+4. On first boot, `app.py` detects missing models and runs `setup.py` automatically
+
+Your app is live at: `https://huggingface.co/spaces/YOUR_HF_USERNAME/medscan-ai`
+
+### Key files for Hugging Face Spaces
+
+| File | Purpose |
+|------|---------|
+| `packages.txt` | System packages installed via `apt-get` (Tesseract, libgl1) |
+| `requirements.txt` | Python packages installed via `pip` |
+| `app.py` | Entry point — HF Spaces runs `streamlit run app.py` |
+| `.streamlit/config.toml` | Theme and server settings |
+
+> **Note:** HF Spaces has internet access during the build phase, so NLTK downloads and model training work automatically. The app itself runs offline once deployed.
+
+---
+
+## 🔒 Offline Guarantee
+
+| Check | Status |
+|-------|--------|
+| API Keys Required | ❌ None |
+| Internet at Runtime | ❌ Not Used |
+| ML Model Training | ✅ Local (setup.py or Docker build) |
+| NLTK Resources | ✅ Downloaded once, cached locally |
+| OCR Engine | ✅ Tesseract runs on-device |
+| All Data Files | ✅ Stored in `data/` and `models/` |
+| Docker Image | ✅ Fully self-contained after build |
 
 ---
 
@@ -331,6 +456,7 @@ Each medicine includes: generic name, brand names, form, strength, mechanism, us
 
 <div align="center">
 
-*Built with Python · Runs 100% Offline · No API Key Required*
+*Built with Python · Runs 100% Offline · Docker Ready · HF Spaces Compatible*
 
 </div>
+
