@@ -1,17 +1,33 @@
 """
 ui_styles.py
 ============
-All custom CSS for MEDSCAN AI injected via st.markdown(get_styles(), unsafe_allow_html=True).
-Defines: CSS variables (design tokens), global body styles, component styles,
-         and all keyframe animations.
+This module injects the custom CSS design system into the Streamlit app.
 
-Includes Google Fonts import (Syne, JetBrains Mono, DM Sans).
-The subtle column grid overlay is applied to the body background.
+Why custom CSS?
+  Streamlit's default styling is functional but generic. MedScan AI needed
+  a dark, clinical aesthetic that communicates trust and precision.
+  All styling is managed centrally here so changes only need to be made
+  in one place.
 
-Author:  ANTIGRAVITY BUILD
+Design system:
+  - Colour palette: dark navy (#0a0f1e) background, cyan (#00d4ff) for
+    interactive elements, orange (#ff6b35) for accents, green/amber/red
+    for status indicators.
+  - Typography: Syne (headings), DM Sans (body), JetBrains Mono (data/labels)
+    — all loaded from Google Fonts.
+  - Components: medicine cards, chat bubbles, strategy badges, comparison
+    cards, sidebar status dots, info rows, bullet items, pack tags.
+  - Animations: scan pulsing circle, button hover transitions, card hover lift.
+
+Note: Streamlit re-runs the entire script on every interaction, so inject_styles()
+is called at the top of app.py on every run. CSS injection via st.markdown with
+unsafe_allow_html=True is the standard approach for custom Streamlit themes.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 

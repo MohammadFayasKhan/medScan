@@ -1,19 +1,31 @@
 """
 preprocessor.py
 ===============
-NLP text preprocessing utilities using NLTK.
-Provides a clean text pipeline: tokenise → remove stopwords → optionally stem.
-All NLTK resources are downloaded locally via download_nltk_resources().
-No internet connection required at runtime after first setup.
+This module handles all text preprocessing for the MedScan AI chatbot and
+search engine. Before any machine learning can happen, raw user input needs
+to be cleaned, tokenised, and filtered down to its meaningful content.
 
-Imports from: nltk, re, string
-Exports:      download_nltk_resources, clean_text, tokenize,
-              remove_stopwords, stem_tokens, preprocess_pipeline,
-              extract_medical_keywords
+Why preprocessing matters here:
+  - A user might type "What ARE the Side-Effects??", "what r side effects",
+    or "SIDE EFFECTS?" — all should map to the same intent.
+  - Common English words like "what", "are", "the" carry no meaning for
+    intent classification and should be removed.
+  - Medical terms like "pregnancy", "dosage", "overdose" must be preserved
+    even if they would normally be treated as stopwords.
 
-Author:  ANTIGRAVITY BUILD
+Pipeline applied to every piece of text:
+  1. clean_text        → lowercase, remove punctuation and special characters
+  2. tokenize          → split sentence into individual word tokens (NLTK punkt)
+  3. remove_stopwords  → filter out common English words (but keep medical ones)
+  4. stem_tokens       → (optional) reduce words to root form e.g. "dosing"→"dose"
+  5. rejoin            → return as a single string ready for TF-IDF vectorisation
+
+All NLTK resources are downloaded once by download_nltk_resources() during setup.
+At runtime, everything runs from the local cache — no internet needed.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
 
 import re

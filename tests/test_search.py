@@ -1,14 +1,28 @@
 """
 test_search.py
 ==============
-Unit tests for modules/medicine_search.py — multi-strategy search engine.
+Unit tests for modules/medicine_search.py
 
-Run with: pytest tests/test_search.py -v
+These tests verify that all three search strategies work correctly and
+that the cascade (exact → TF-IDF → fuzzy) handles various input types.
 
-Author:  ANTIGRAVITY BUILD
+Test coverage:
+  - exact_search() finds medicines by exact name (case-insensitive)
+  - Brand name lookup: "Eyemist" resolves to "hypromellose" via synonyms
+  - tfidf_search() returns relevant medicines for clinical queries
+  - fuzzy_search() handles typos like "paracetaml" → "paracetamol"
+  - fuzzy_search() handles OCR digit/letter swaps like "paracetam0l"
+  - search_medicine() returns a properly structured result dict
+  - Not-found queries return empty results with suggestions
+  - Empty query is handled safely without errors
+
+Run with: python -m pytest tests/test_search.py -v
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys

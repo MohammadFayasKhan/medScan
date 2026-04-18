@@ -1,20 +1,39 @@
 """
 test_algorithms.py
 ==================
-ML model accuracy and algorithm correctness tests.
+Unit tests for ML algorithm correctness and accuracy validation.
 
-Tests:
-  - Naive Bayes classifier accuracy (should be >85%)
-  - TF-IDF vectoriser properties
-  - Compare engine scoring
-  - Preprocessor pipeline correctness
+These tests verify the mathematical properties of the ML components —
+not just that they run, but that they perform at acceptable quality levels.
 
-Run with: pytest tests/test_algorithms.py -v
+Test coverage:
+  Preprocessor:
+    - clean_text() correctly lowercases and removes special characters
+    - preprocess_pipeline() returns non-empty output for valid input
+    - extract_medical_keywords() identifies known medical terms in text
 
-Author:  ANTIGRAVITY BUILD
+  Naive Bayes Classifier:
+    - Training accuracy must be >= 85% on the 799-sample dataset
+      (actual result: 99.1% — well above the threshold)
+    - predict_intent() correctly classifies a known training example
+
+  TF-IDF Properties:
+    - Vectoriser transforms a query to the right shape (1 × n_features)
+    - Cosine similarity scores are always in the range [0, 1]
+
+  Compare Engine:
+    - compute_medicine_scores() returns all 5 required scoring dimensions
+    - compare_medicines() returns a dict with scores and winners
+    - compare_medicines() raises ValueError when fewer than 2 medicines given
+    - generate_radar_chart() returns a valid matplotlib Figure object
+
+Run with: python -m pytest tests/test_algorithms.py -v
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys

@@ -1,17 +1,33 @@
 """
 test_ocr.py
 ===========
-Unit tests for modules/ocr_engine.py — OCR text extraction and cleaning.
+Unit tests for modules/ocr_engine.py
 
-Note: Tests that require pytesseract or OpenCV are gracefully skipped
-if those libraries are not installed.
+These tests verify that the OCR text cleaning and candidate extraction
+functions work correctly without needing Tesseract to be installed.
 
-Run with: pytest tests/test_ocr.py -v
+Test coverage:
+  - clean_ocr_output() normalises whitespace and handles None/empty input
+  - clean_ocr_output() fixes common OCR errors: digit "0" → letter "O"
+    in all-caps tokens (e.g. "PARACETAM0L" → "PARACETAMOL")
+  - clean_ocr_output() preserves digits in numeric tokens like "500mg"
+  - extract_candidates() filters out non-medicine words (TABLET, STORE, etc.)
+  - extract_candidates() removes tokens shorter than 4 characters
+  - extract_candidates() returns at most 5 candidates per image
+  - extract_candidates() identifies "PARACETAMOL" as the best candidate
+    from typical medicine label OCR output
+  - run_ocr_pipeline() returns a correctly structured dict even on invalid input
 
-Author:  ANTIGRAVITY BUILD
+Note: Tests requiring actual Tesseract OCR are only the pipeline structure
+tests — they check the output dict shape, not the OCR text quality.
+
+Run with: python -m pytest tests/test_ocr.py -v
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys

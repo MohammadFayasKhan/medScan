@@ -1,23 +1,29 @@
 """
 medicine_search.py
 ==================
-Multi-strategy offline medicine search engine.
+This module implements the three-strategy medicine search engine.
 
-Three search strategies applied in cascading priority order:
-  Strategy 1: Exact string matching (fastest, O(n))
-  Strategy 2: TF-IDF + Cosine Similarity (semantic matching)
-  Strategy 3: Fuzzy string matching (handles typos and OCR errors)
+Why three strategies?
+  A single search approach would fail in many real-world cases:
+  - "paracetamol" → exact match works perfectly
+  - "fever headache tablet" → needs TF-IDF semantic similarity
+  - "paracetaml" (OCR typo) → needs Levenshtein fuzzy matching
 
-The master search function (search_medicine) tries all three in order
-and returns on the first strategy that produces a confident match.
+Strategy order (falls through to next if confidence is low):
+  1. EXACT MATCH   — checks name_lower and brand name synonyms (O(1) lookup)
+  2. TF-IDF MATCH  — vectorises the query and finds the closest medicine
+                     in the TF-IDF document space using cosine similarity
+  3. FUZZY MATCH   — uses Levenshtein edit distance to find the closest
+                     medicine name, tolerating up to ~30% character changes
 
-Imports from: sklearn, fuzzywuzzy, numpy, pandas, time, modules/medicine_db
-Exports:      build_search_index, search_medicine, get_suggestions
+This cascade ensures high recall (few missed medicines) while the confidence
+score tells the UI how certain we are about the match.
 
-Author:  ANTIGRAVITY BUILD
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import time
 import json

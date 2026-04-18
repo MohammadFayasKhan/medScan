@@ -1,18 +1,25 @@
 """
 export_utils.py
 ===============
-Functions to export medicine information in various formats (CSV, JSON, text).
-All exports are generated as in-memory strings — no server-side file storage.
-Users download via Streamlit's st.download_button().
+This module provides data export functionality for the MedScan AI app.
 
-Imports from: csv, json, io, streamlit
-Exports:      medicine_to_csv_string, medicine_to_json_string,
-              chat_history_to_text, create_download_button
+Why in-memory export?
+  Streamlit's st.download_button requires data as a string or bytes object.
+  We avoid writing to actual disk files because:
+  - It keeps the app stateless (no temp file cleanup needed)
+  - Works correctly whether the app is run locally or hosted on a server
+  - Avoids file permission issues on different operating systems
 
-Author:  ANTIGRAVITY BUILD
+What can be exported:
+  - Medicine data as CSV (single medicine or full database)
+  - Medicine data as JSON (structured, for use with other tools)
+  - Chatbot conversation transcript as plain text
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import csv
 import json

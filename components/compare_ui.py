@@ -1,14 +1,29 @@
 """
 compare_ui.py
 =============
-Renders the medicine comparison tab (Tab 3) UI.
-Allows selecting up to 3 medicines for side-by-side comparison,
-displays a comparison table, radar chart, and verdict.
+This component renders the medicine comparison tab (Tab 3).
 
-Author:  ANTIGRAVITY BUILD
+Workflow:
+  1. User selects 2 or 3 medicines from a multiselect dropdown
+  2. Click 'Compare Medicines' button
+  3. A side-by-side comparison table is shown (st.dataframe)
+  4. A radar chart is rendered comparing scores across 5 dimensions
+  5. A plain-English verdict explains which medicine is better and why
+
+The comparison logic (scoring + chart + verdict) lives in
+modules/compare_engine.py. This component is only responsible
+for the Streamlit UI structure around it.
+
+Session state:
+  compare_medicines list is stored in session state so it persists
+  across reruns and can be pre-populated from the database browser (Tab 2)
+  when a user clicks "Add to comparison" on a medicine card.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 import pandas as pd

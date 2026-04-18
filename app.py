@@ -1,16 +1,33 @@
 """
 app.py
 ======
-Main Streamlit entry point for MEDSCAN AI.
-Handles: page config, CSS injection, session state initialisation,
-model loading, hero header, and 3-tab navigation.
+Main entry point for MedScan AI. Run this file to launch the app:
 
-Run with: streamlit run app.py
+    streamlit run app.py
 
-Author:  ANTIGRAVITY BUILD
+What this file does:
+  1. Configures the Streamlit page (title, icon, layout)
+  2. Injects the custom CSS design system
+  3. Initialises session state variables on first run
+  4. Loads all ML models (cached so they only load once per session)
+  5. Renders the hero header with the app title
+  6. Renders the sidebar (system status, recent searches, quick access)
+  7. Sets up the 3 main navigation tabs:
+       Tab 1: Scan and Search (OCR upload + text search + chatbot)
+       Tab 2: Medicine Database (filterable grid of all 20 medicines)
+       Tab 3: Compare Medicines (side-by-side radar chart comparison)
+
+Model loading strategy:
+  @st.cache_resource ensures that all ML models (search index, Naive Bayes
+  classifier, TF-IDF vectoriser) are loaded only once and shared across
+  all users in the same Streamlit session. On reruns (which happen on every
+  interaction), the cached result is returned instantly.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys
@@ -68,7 +85,7 @@ st.set_page_config(
     menu_items={
         "Get Help": None,
         "Report a bug": None,
-        "About": "MEDSCAN AI v1.0.0 — ANTIGRAVITY BUILD — Offline Medicine Intelligence System",
+        "About": "MEDSCAN AI v1.0.0 — MedScan AI Project — Offline Medicine Intelligence System",
     }
 )
 
@@ -213,7 +230,7 @@ chat_labels = st.session_state.tfidf_keys
 # SECTION 5: HERO HEADER
 # ═════════════════════════════════════════════════════════════════════
 
-# Header HTML with split-color wordmark and ANTIGRAVITY BUILD badge
+# Header HTML with split-color wordmark and MedScan AI Project badge
 hero_html = """
 <div class="hero">
   <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;">
@@ -224,7 +241,7 @@ hero_html = """
       <div class="hero-subtitle">Offline Medicine Intelligence System</div>
     </div>
     <div class="antigravity-badge">
-      <span class="badge-ag">ANTIGRAVITY</span>&nbsp;<span class="badge-build">BUILD</span>
+      <span class="badge-ag">INT428</span>&nbsp;<span class="badge-build">AI SYSTEMS</span>
     </div>
   </div>
   <div style="margin-top:0.8rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);">

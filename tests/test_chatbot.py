@@ -1,14 +1,31 @@
 """
 test_chatbot.py
 ===============
-Unit tests for modules/chatbot.py — intent classification and response generation.
+Unit tests for modules/chatbot.py
 
-Run with: pytest tests/test_chatbot.py -v
+These tests verify that the offline NLP chatbot correctly classifies user
+questions into medical intents and generates appropriate responses.
 
-Author:  ANTIGRAVITY BUILD
+Test coverage:
+  - load_intents() returns all 14 intent categories with correct structure
+  - build_intent_index() returns a valid (vectoriser, matrix, labels) tuple
+  - classify_intent() correctly identifies intent for typical questions:
+      "what does this medicine treat" → "uses"
+      "how many tablets should I take" → "dosage"
+      "are there any adverse reactions" → "side_effects"
+      "is this safe during pregnancy" → "pregnancy"
+      "what if I take too much" → "overdose"
+  - generate_response() returns non-empty strings for all 14 intents
+  - preprocess_question() lowercases and removes stopwords correctly
+  - Empty/nonsense input is handled without crashing
+
+Run with: python -m pytest tests/test_chatbot.py -v
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys

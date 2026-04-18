@@ -1,12 +1,22 @@
 """
-__init__.py
-===========
-Package initialisation for the `components` package of MEDSCAN AI.
+components/__init__.py
+======================
+Package marker for the components/ directory.
 
-Author:  ANTIGRAVITY BUILD
+The components/ package contains all Streamlit UI rendering code.
+Each module is responsible for one section of the interface.
+Logic (AI, search, NLP) is intentionally kept separate in modules/.
+
+This separation makes it easy to:
+  - Change the UI without touching the AI logic
+  - Test the AI logic independently of Streamlit
+  - Read and understand each part of the app in isolation
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 __version__ = "1.0.0"
 __all__ = [

@@ -1,18 +1,32 @@
 """
 sidebar_ui.py
 =============
-Renders the always-visible sidebar containing:
-  - App logo (small)
-  - System status section with online/offline indicators
-  - Recent searches (last 5) as clickable pills
-  - Quick access: 10 common medicine buttons
-  - How to use: 3-step mini guide
-  - Keyboard shortcuts
+This component renders the always-visible left sidebar of the app.
 
-Author:  ANTIGRAVITY BUILD
+Sidebar sections:
+  1. Logo — MedScan AI wordmark in the app colour scheme
+  2. System Status — real-time status indicators:
+       ✓ Offline Mode Active
+       ✓ ML Models Ready (or "Loading..." on first run)
+       ✓ Database: N medicines
+       ✓ No API Key Required
+       ✓ Zero Internet Calls
+  3. Recent Searches — last 5 unique searches as clickable buttons
+     (clicking re-triggers the search in Tab 1)
+  4. Quick Access — 10 common medicine buttons for fast navigation
+  5. How to Use — 3-step guide for new users
+  6. Version info
+
+Design decision:
+  The sidebar is rendered unconditionally on every page rerun.
+  It reads from st.session_state for dynamic data (recent searches,
+  model status) so it always reflects the current app state.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 import pandas as pd
@@ -177,7 +191,7 @@ def render_sidebar(df: pd.DataFrame) -> None:
         st.markdown(
             '<div style="font-family:var(--font-mono);font-size:0.6rem;'
             'color:var(--muted);text-align:center;">'
-            'MEDSCAN AI v1.0.0 · ANTIGRAVITY BUILD<br>'
+            'MEDSCAN AI v1.0.0 · MedScan AI Project<br>'
             '100% Offline · No API Key · Python + Streamlit'
             '</div>',
             unsafe_allow_html=True

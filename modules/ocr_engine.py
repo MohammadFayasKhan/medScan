@@ -1,22 +1,34 @@
 """
 ocr_engine.py
 =============
-Handles medicine package image scanning using an OpenCV preprocessing
-pipeline combined with pytesseract OCR. All processing is performed locally —
-no cloud OCR service is used at runtime.
+This module handles the image → medicine name extraction pipeline.
+When a user uploads a photo of a medicine package, this module processes
+the image and extracts the medicine name from it.
 
-Pipeline:
-  Raw Image → Resize → Grayscale → Denoise (Gaussian) →
-  Adaptive Threshold → Morphological Close → Deskew → OCR → Clean → Extract
+OCR (Optical Character Recognition) pipeline steps:
+  1. Convert to grayscale (colour information is not needed for text)
+  2. Apply CLAHE contrast enhancement (improves readability in poor lighting)
+  3. Apply adaptive thresholding (converts to binary black/white)
+  4. Detect and correct image skew using Hough line transform
+  5. Apply morphological operations to reduce noise
+  6. Run Tesseract LSTM engine on the cleaned image
+  7. Clean the raw OCR output (fix digit/letter swaps like 0→O)
+  8. Extract the most likely medicine name from the recognised text
 
-Imports from: cv2 (OpenCV), pytesseract, numpy, PIL (Pillow), io
-Exports:      run_ocr_pipeline (main entry point)
-              All helper functions also exported for unit testing.
+Common OCR challenges this pipeline addresses:
+  - Poor lighting in photos taken with phones
+  - Skewed or tilted images
+  - Small text on medicine strips
+  - Digit–letter confusion (e.g. "PAR4CETAM0L" vs "PARACETAMOL")
 
-Author:  ANTIGRAVITY BUILD
+Note: Tesseract must be installed separately on the OS.
+If it's not found, the module returns a helpful installation guide.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import re
 import io

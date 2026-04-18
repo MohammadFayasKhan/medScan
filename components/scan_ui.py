@@ -1,19 +1,32 @@
 """
 scan_ui.py
 ==========
-Renders the medicine scanning and text search interface (Tab 1).
+This component renders the main medicine scan and search interface (Tab 1).
 
-Sections:
-  - Scan mode selector: [📷 Upload Image] or [⌨️ Type Name]
-  - Upload mode: file uploader + preview + SCAN button → OCR pipeline
-  - Text mode: text input + SEARCH button + autocomplete
-  - Not-found state with suggestions
-  - OCR results display (in expandable section)
+Two input modes:
+  1. Upload Image mode:
+     - User uploads a JPG/PNG/WEBP photo of a medicine package
+     - Image is previewed and passed through the OCR pipeline
+     - Extracted text candidates are shown in an expandable panel
+     - The best candidate is automatically searched in the database
 
-Author:  ANTIGRAVITY BUILD
+  2. Type Name mode:
+     - User types a medicine name, brand name, or generic name
+     - The search engine tries exact → TF-IDF → fuzzy strategies
+     - Results appear immediately with a confidence badge
+
+After a medicine is found (by either mode), this component:
+  - Calls render_medicine_header() from medicine_card.py
+  - Calls render_all_sections() from info_sections.py
+  - Calls render_chatbot() from chatbot_ui.py
+
+If no medicine is found, a 'not found' card is shown with suggestions.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 import pandas as pd

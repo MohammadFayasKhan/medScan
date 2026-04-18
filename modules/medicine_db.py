@@ -1,25 +1,30 @@
 """
 medicine_db.py
 ==============
-Loads, validates, and queries the local offline CSV medicine database.
-All data is stored in data/medicines.csv — no internet required.
+This module is responsible for loading and querying the offline medicine database.
+The database is a CSV file stored at data/medicines.csv — no internet needed.
 
-Provides:
-  - Cached DataFrame loading
-  - Schema validation
-  - Name/category search helpers
-  - List-column parsing (CSV strings → Python lists)
-  - Corpus builder for TF-IDF search indexing
+What this module does:
+  - Reads medicines.csv into a pandas DataFrame at startup and caches it
+    using Streamlit's @st.cache_data so repeated calls don't re-read the disk.
+  - Validates that all 27 required columns are present in the CSV.
+  - Converts columns like "brand_names" and "indications" from comma-separated
+    strings into actual Python lists, which makes them much easier to display.
+  - Provides helper functions for name/category lookup used by the search engine
+    and the comparison engine.
+  - Builds the text corpus that the TF-IDF search index is trained on.
 
-Imports from: pandas, streamlit (for caching), os
-Exports:      load_database, validate_database, get_medicine_by_key,
-              search_by_name, get_all_names, get_all_categories,
-              filter_by_category, get_medicine_card_data, build_search_corpus
+Design decision:
+  We chose CSV over SQLite because it is human-readable, easy to edit, and
+  portable. For 20 medicines, the performance difference is negligible.
+  The pandas + cache_data combination gives us the performance of an in-memory
+  database without the setup complexity.
 
-Author:  ANTIGRAVITY BUILD
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import logging

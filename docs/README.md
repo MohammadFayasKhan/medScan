@@ -1,7 +1,7 @@
 # MEDSCAN AI
 
 > **100% Offline Medicine Intelligence System**
-> ANTIGRAVITY BUILD | Python + Streamlit | Academic IEEE Standard
+> INT428 — AI Systems Design | Python + Streamlit
 
 ---
 
@@ -246,7 +246,7 @@ medscan_ai/
 ## 🎓 Academic Information
 
 **Course:** INT428 — AI Systems Design  
-**Build System:** ANTIGRAVITY BUILD  
+**Author:** Mohammad Fayas Khan  
 **Version:** 1.0.0  
 **Coding Standard:** IEEE 1471 compliant  
 **Documentation:** Full inline docstrings, IEEE-style module headers

@@ -1,14 +1,31 @@
 """
 medicine_card.py
 ================
-Renders the large medicine identification header card displayed at the top
-of all search/scan results. Shows name, generic name, category badge,
-strength, and form in the MedScan+ inspired layout.
+This component renders the large medicine identification card shown at the
+top of every search result.
 
-Author:  ANTIGRAVITY BUILD
+Layout:
+  ┌───────────────────────────────────────────────────┐
+  │  💊  [CATEGORY BADGE]                             │
+  │  MEDICINE NAME (large, cyan)                      │
+  │  Generic Name  ·  Form                            │
+  │  [Strength]  [Active Substance]  [Manufacturer]   │
+  └───────────────────────────────────────────────────┘
+
+Design decisions:
+  - The category badge colour is determined by matching the category string
+    against the CATEGORY_COLOR_MAP dictionary (substring matching so partial
+    categories like "NSAID / Analgesic" still match correctly).
+  - The medicine name is displayed in large Syne font to make it immediately
+    recognisable.
+  - The search strategy badge (Exact / TF-IDF / Fuzzy) and confidence score
+    are shown above the card so the user knows how the medicine was found.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 

@@ -1,14 +1,32 @@
 """
 chatbot_ui.py
 =============
-Renders the MedBot chatbot interface that appears below medicine information.
-Handles: message history display, quick question chips, user input,
-         send logic, export button, and medical disclaimer.
+This component renders the MedBot chatbot interface at the bottom of the
+medicine information page.
 
-Author:  ANTIGRAVITY BUILD
+Features:
+  - Message history displayed as styled chat bubbles (bot on left, user on right)
+  - 8 pre-defined quick question chips for common queries (dosage, side effects, etc.)
+  - Free-text input box + Send button
+  - Intent badge on each bot response showing what the chatbot understood
+  - Export button to download the full conversation as a text file
+  - Medical disclaimer card
+
+How it connects to the AI:
+  When the user sends a message, handle_user_input() calls get_chat_response()
+  from modules/chatbot.py. The chatbot preprocesses the text, classifies the
+  intent using TF-IDF cosine similarity, and returns a response filled with
+  the current medicine's data.
+
+Session state:
+  Chat history is stored in st.session_state.chat_history so it persists
+  across Streamlit reruns. It is cleared when a new medicine is selected.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 from modules.chatbot import get_chat_response

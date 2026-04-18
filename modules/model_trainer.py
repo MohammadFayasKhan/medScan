@@ -1,22 +1,26 @@
 """
 model_trainer.py
 ================
-Unified model training script called at app startup (via setup.py
-or lazily on first run from app.py).
+This module orchestrates loading and saving of ML model artifacts.
 
-Handles:
-  - Training and saving the Naive Bayes intent classifier
-  - Building and saving the TF-IDF medicine search index
-  - Creating all required directories
+Role in the system:
+  At startup (both via setup.py and app.py), the app needs:
+  - The TF-IDF search index (for medicine name lookup)
+  - The Naive Bayes intent classifier (for chatbot)
+  - The TF-IDF intent vectoriser (for chatbot pattern matching)
 
-Imports from: modules/intent_classifier, modules/medicine_db,
-              modules/medicine_search, modules/chatbot
-Exports:      run_full_training
+  This module decides whether to load pre-saved models from models/
+  (fast path, used on every launch after setup) or train them fresh
+  (slow path, used only when models/ is empty or corrupted).
 
-Author:  ANTIGRAVITY BUILD
+  Using joblib for model persistence is standard practice with scikit-learn.
+  It serialises the Python objects efficiently to .pkl files.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import logging

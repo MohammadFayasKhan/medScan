@@ -1,23 +1,31 @@
 """
 setup.py
 ========
-MEDSCAN AI — One-time Setup Script.
+One-time setup script for MedScan AI. Run this before launching the app:
 
-Run this ONCE before launching app.py for the first time.
+    python setup.py
 
-Steps:
-  1. Create required directories (models/, data/, sample_images/)
-  2. Download NLTK resources (punkt, stopwords, wordnet, tagger)
-  3. Load intents.json
-  4. Train Naive Bayes intent classifier → save to models/
-  5. Load medicine database
-  6. Build TF-IDF search index → save to models/
-  7. Print setup complete message with launch instructions
+What this script does:
+  1. Creates required directories (models/, data/, sample_images/) if missing
+  2. Downloads NLTK resources (punkt tokeniser, stopwords, wordnet) to local cache
+  3. Verifies that data/medicines.csv and data/intents.json exist
+  4. Loads the medicine database and validates its schema
+  5. Trains the Naive Bayes intent classifier and saves it to models/
+  6. Builds the TF-IDF medicine search index and saves it to models/
 
-Author:  ANTIGRAVITY BUILD
+Why a separate setup step?
+  Training ML models every time the app starts would add 2-5 seconds to
+  every launch. By saving the trained models to disk with joblib, subsequent
+  launches load in under 0.5 seconds.
+
+After running setup.py successfully, launch the app with:
+    streamlit run app.py
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys
@@ -65,7 +73,7 @@ def main():
     """Run the complete setup pipeline."""
     print("\n" + "═" * 60)
     print("  MEDSCAN AI — Setup Script")
-    print("  ANTIGRAVITY BUILD — Offline Medicine Intelligence System")
+    print("  MedScan AI Project — Offline Medicine Intelligence System")
     print("═" * 60)
     print()
 

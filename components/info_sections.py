@@ -1,24 +1,33 @@
 """
 info_sections.py
 ================
-Renders all collapsible medicine information sections using Streamlit expanders.
-Each section maps to specific fields in the medicine data dict.
+This component renders the 9 collapsible accordion sections that display
+detailed medicine information below the header card.
 
-9 sections rendered (in order):
-  ℹ️  Basic Information
-  ⚡ Usage and Action
-  💧 Dosage and Use
-  ⚠️  Warnings
-  🚫 Contraindications
-  🔗 Drug Interactions
-  🔴 Side Effects
-  🛍️  Availability and Substitutes
-  📚 Medical Information Sources
+Each section pulls specific fields from the medicine data dictionary
+and renders them with appropriate styling:
+  - ℹ️  Basic Information     → name, generic, form, strength, manufacturer
+  - ⚡  Usage and Action      → uses, mechanism, indications
+  - 💧  Dosage and Use        → dosage, timing, spacing, admin_tips
+  - ⚠️  Warnings              → pregnancy, paediatric, driving, storage
+  - 🚫  Contraindications     → conditions where medicine must NOT be used
+  - 🔗  Drug Interactions     → known medicine-medicine interactions
+  - 🔴  Side Effects          → common (amber) and serious (red) effects
+  - 🛍️  Availability          → pack sizes and therapeutic substitutes
+  - 📚  Sources               → reference databases used
 
-Author:  ANTIGRAVITY BUILD
+Design decisions:
+  - Warnings are shown in amber, contraindications and serious side effects
+    in red, drug interactions in purple — colour coding creates visual hierarchy.
+  - Streamlit expanders are used for all sections so the user can focus on
+    what they care about without scrolling past irrelevant content.
+  - render_all_sections() is called once from scan_ui.py after the header card.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import streamlit as st
 

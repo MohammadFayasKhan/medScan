@@ -1,22 +1,32 @@
 """
 compare_engine.py
 =================
-Logic for side-by-side medicine comparison across key clinical dimensions.
-Compares up to 3 medicines and produces:
-  - Numerical scores per dimension
-  - Dark-themed matplotlib radar (spider) chart
-  - Human-readable comparison verdict text
-  - pandas DataFrame for tabular display
+This module handles side-by-side comparison of two or three medicines.
 
-Imports from: matplotlib, pandas, numpy
-Exports:      compute_medicine_scores, compare_medicines,
-              generate_radar_chart, generate_comparison_verdict,
-              build_comparison_table
+What the comparison does:
+  Each medicine is scored across several dimensions derived from its
+  database fields. The scores (0-100) are then:
+  - Displayed as a radar (spider) chart using matplotlib
+  - Used to generate a plain-English verdict explaining which medicine
+    performs better in each dimension and for what patient types
 
-Author:  ANTIGRAVITY BUILD
+Scoring dimensions:
+  - Safety Score     : based on severity of side effects and contraindications
+  - Avail. Score     : number of pack sizes and substitute options
+  - Ease of Use      : dosing frequency and administration complexity
+  - Info Quality     : completeness of the database record
+  - Profile Score    : interaction count and warning severity
+
+Design note:
+  The radar chart uses matplotlib with a dark background to match the app's
+  colour scheme. The chart is rendered as a matplotlib Figure object and
+  displayed using st.pyplot() in the compare_ui.py component.
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import logging
 import numpy as np

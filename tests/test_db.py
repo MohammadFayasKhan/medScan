@@ -1,14 +1,27 @@
 """
 test_db.py
 ==========
-Unit tests for modules/medicine_db.py — database loading and querying.
+Unit tests for modules/medicine_db.py
 
-Run with: pytest tests/test_db.py -v
+These tests verify that the database loading and querying system works
+correctly under normal conditions and handles edge cases gracefully.
 
-Author:  ANTIGRAVITY BUILD
+Test coverage:
+  - load_database() returns a properly structured DataFrame
+  - All 27 required columns are present
+  - List columns (brand_names, indications, etc.) are converted from CSV strings
+  - validate_database() correctly identifies valid and invalid DataFrames
+  - get_medicine_by_key() finds medicines by exact and case-insensitive name
+  - get_all_names(), get_all_categories(), filter_by_category() work correctly
+  - build_search_corpus() produces one document per medicine row
+
+Run with: python -m pytest tests/test_db.py -v
+
+Author:  Mohammad Fayas Khan
+Course:  INT428 — AI Systems Design
 Version: 1.0.0
-Date:    2026-04-18
 """
+
 
 import os
 import sys
